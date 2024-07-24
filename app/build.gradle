@@ -1,0 +1,56 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+    id 'application'
+}
+
+group = 'com.github.wi110r'
+version = '1.0-SNAPSHOT'
+
+
+javafx {
+    // Set version if needed
+    // version = '17'
+    modules = [ 'javafx.controls', 'javafx.fxml' ]
+}
+
+application {
+    mainClass.set("com.github.wi110r.app.FxmlAppKt")
+}
+
+
+dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+
+    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC"
+
+//
+//    implementation 'org.openjfx:javafx-controls:17'
+//    implementation 'org.openjfx:javafx-fxml:17'
+
+    // MVC Stuff
+//    implementation "org.openjfx:javafx-controls:17:win"
+//    implementation "org.openjfx:javafx-fxml:17:win"
+//    implementation "org.openjfx:javafx-graphics:17:win"
+
+    // MVVM Stuff
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-javafx:1.6.4")
+    implementation("org.openjfx:javafx-controls:19")
+
+    implementation project(":botsbase")
+}
+
+test {
+    useJUnitPlatform()
+}
+
+// Not needed i think
+//kotlin {
+//    jvmToolchain(19)
+//}
+
+tasks.withType(Javadoc) {
+    options.addStringOption('link', 'https://openjfx.io/javadoc/17/')
+}
+

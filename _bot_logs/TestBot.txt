@@ -1,0 +1,14 @@
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] loadBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] initBot() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:02] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[31m[2024-07-24 06:59:02] [WARN] [TestBot] Market Is CLOSED! Wait time: 2.52 hours. [0m
+[1m[31m[2024-07-24 06:59:38] [WARN] [TestBot] Shutdown Hook Triggered [0m
+[1m[34m[2024-07-24 06:59:38] [INFO] [TestBot] updateBotState() Ran. [0m
+[1m[34m[2024-07-24 06:59:38] [INFO] [TestBot] powerOff() Ran() [0m

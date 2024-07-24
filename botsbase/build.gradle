@@ -1,0 +1,37 @@
+plugins {
+    id 'org.jetbrains.kotlin.jvm'
+
+}
+
+group = 'com.github.wi110r'
+version = '1.0-SNAPSHOT'
+
+
+dependencies {
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
+
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC'
+
+    // SQLite stuff
+    implementation("com.zaxxer:HikariCP:5.0.1")
+    implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
+    implementation('ch.qos.logback:logback-classic:1.4.12')
+
+
+    implementation 'com.google.code.gson:gson:2.10.1'
+
+    // My Stuff ////////////////////////////////////////////////////////////////////////
+
+    // Might not need to be 'api'
+    api 'com.github.wigggy:charles-schwab-api:1.0.1'
+}
+
+test {
+    useJUnitPlatform()
+}
+
+
+// Not needed i think
+//kotlin {
+//    jvmToolchain(19)
+//}
