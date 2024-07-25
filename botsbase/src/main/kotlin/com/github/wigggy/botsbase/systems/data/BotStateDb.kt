@@ -1,4 +1,4 @@
-package com.github.wigggy.botsbase.systems
+package com.github.wigggy.botsbase.systems.data
 
 
 import com.github.wigggy.botsbase.systems.bot_tools.Common
@@ -10,7 +10,6 @@ import com.zaxxer.hikari.HikariConfig
 import com.zaxxer.hikari.HikariDataSource
 import java.sql.Connection
 import java.sql.Date
-import java.sql.DriverManager
 import java.sql.ResultSet
 
 class BotStateDb(

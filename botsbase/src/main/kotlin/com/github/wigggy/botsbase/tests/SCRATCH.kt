@@ -1,12 +1,20 @@
-import kotlin.math.round
-import kotlin.random.Random
+import com.github.wigggy.botsbase.systems.analysis.TechnicalAnalysis
+import com.github.wigggy.botsbase.systems.bot_tools.Common
 
-fun getRandomDouble(): Double {
-    val randomValue = Random.nextDouble(0.00, 0.10)
-    return round(randomValue * 100) / 100
-}
 
 fun main() {
-    val randomDouble = getRandomDouble()
-    println(randomDouble)
+    val cs = Common.csApi
+
+
+    val testChart = cs.getHistoricData1day("SPY", 6, true)!!
+
+    val testValues = testChart.close
+    val indValues = TechnicalAnalysis.rsi(testValues, 4).rsiValues
+
+    println("Indicator Size: ${indValues.size}")
+    println("TestValues Size: ${testValues.size}")
+
+    println()
+    println("Indicator: ${indValues}")
+    println("Test Vals: ${testValues}")
 }

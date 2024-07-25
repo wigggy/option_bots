@@ -1,6 +1,6 @@
-package com.github.wigggy.botsbase.systems
+package com.github.wigggy.botsbase.systems.managers
 
-import OptionPositionDb
+import com.github.wigggy.botsbase.systems.data.OptionPositionDb
 import com.github.wigggy.botsbase.systems.interfaces.AccountManager
 import java.time.LocalDate
 import java.time.ZoneId

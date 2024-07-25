@@ -1,10 +1,9 @@
 package com.github.wigggy.app.home
 
-import com.github.wigggy.app.Navigator
 import com.github.wigggy.app.common.ViewModelDesktop
 import com.github.wigggy.app.common.collectLatestSafe
 import com.github.wigggy.app.settings.SettingsScreen
-import com.github.wigggy.botsbase.systems.BotManager
+import com.github.wigggy.botsbase.systems.managers.BotManager
 import com.github.wigggy.botsbase.systems.data.data_objs.BotState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
@@ -61,7 +60,7 @@ class HomeViewModel: ViewModelDesktop {
 
     private fun observeBotStateStateFlow() {
 
-        BotManager.stateFlowMapOfBotState.collectLatestSafe(this, coroutineScope) {bs ->
+        BotManager.stateFlowMapOfBotState.collectLatestSafe(this, coroutineScope) { bs ->
             // Update _uiState if no Open Pos list is showing
             if (_uiState.value.curBotnameOpenPosShowing == ""){
                 _uiState.update {

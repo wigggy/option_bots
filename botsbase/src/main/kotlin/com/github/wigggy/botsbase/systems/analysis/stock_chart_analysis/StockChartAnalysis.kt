@@ -1,4 +1,4 @@
-package com.github.wigggy.botsbase.systems.analysis.stock_chart
+package com.github.wigggy.botsbase.systems.analysis.stock_chart_analysis
 
 import com.github.wigggy.botsbase.systems.bot_tools.Common
 import com.github.wigggy.charles_schwab_api.data_objs.stockchart.CharlesSchwabHistoricData
@@ -9,7 +9,7 @@ import kotlin.math.abs
 
 // TODO Go through and set property values for the following types of values
 //      - closedAtHigh = .20, - isBottomHammer = .4
-data class StockChartAdvanced(
+data class StockChartAnalysis(
     val ticker: String,
     val candleSize: String,
     val periodSize: Int,
@@ -456,7 +456,7 @@ data class StockChartAdvanced(
     companion object {
 
         // Creates Chart from Charles Schwab Api Historic Data
-        fun fromCSHistoricData(csHistoricData: CharlesSchwabHistoricData): StockChartAdvanced {
+        fun fromCSHistoricData(csHistoricData: CharlesSchwabHistoricData): StockChartAnalysis {
 
             val convertCandles = {
                 val loc = mutableListOf<Candle>()
@@ -478,7 +478,7 @@ data class StockChartAdvanced(
                 loc.toList()
             }
 
-            return StockChartAdvanced(
+            return StockChartAnalysis(
                 ticker = csHistoricData.ticker,
                 candleSize = csHistoricData.candleSize,
                 periodSize = csHistoricData.open.size,
@@ -499,7 +499,7 @@ data class StockChartAdvanced(
 
 fun main() {
     val c = Common.csApi.getHistoricData1day("SPY", 6, false)!!
-    val sc = StockChartAdvanced.fromCSHistoricData(c)
+    val sc = StockChartAnalysis.fromCSHistoricData(c)
     val cLast = c.open[c.open.lastIndex]
     val scLast = sc.getOpenAtIndex(-1)
 

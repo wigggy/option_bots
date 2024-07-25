@@ -1,4 +1,4 @@
-package com.github.wigggy.botsbase.systems.analysis.stock_chart
+package com.github.wigggy.botsbase.systems.analysis.stock_chart_analysis
 
 import java.util.*
 

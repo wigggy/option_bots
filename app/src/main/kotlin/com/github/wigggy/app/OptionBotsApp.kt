@@ -2,8 +2,6 @@ package com.github.wigggy.app
 
 import com.github.wigggy.app.common.AppValues
 import com.github.wigggy.app.login.LoginScreen
-import com.github.wigggy.botsbase.systems.BotManager
-import com.github.wigggy.botsbase.systems.PosUpdateManager
 import javafx.application.Application
 import javafx.scene.Scene
 import javafx.scene.layout.StackPane
@@ -46,8 +44,3 @@ class OptionBotsApp: Application() {
     }
 }
 
-fun main() {
-    BotManager.startBots()
-    PosUpdateManager.startUpdaterThread()
-    Application.launch(OptionBotsApp::class.java)
-}

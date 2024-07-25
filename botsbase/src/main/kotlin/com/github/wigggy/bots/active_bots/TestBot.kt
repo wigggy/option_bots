@@ -1,11 +1,10 @@
-package com.github.wigggy.botsbase.active_bots
+package com.github.wigggy.bots.active_bots
 
 import com.github.wigggy.botsbase.systems.BaseBot
 import com.github.wigggy.botsbase.systems.bot_tools.Common
 import com.github.wigggy.botsbase.systems.data.MarketData
 import com.github.wigggy.botsbase.systems.data.data_objs.AnalysisResult
 import com.github.wigggy.botsbase.systems.data.data_objs.OptionPosition
-import com.github.wigggy.botsbase.systems.data.data_objs.TradePermissionCheckResults
 import kotlin.random.Random
 
 class TestBot: BaseBot(

@@ -1,4 +1,4 @@
-package com.github.wigggy.botsbase.active_bots
+package com.github.wigggy.bots.active_bots
 
 import com.github.wigggy.botsbase.systems.BaseBot
 import com.github.wigggy.botsbase.systems.bot_tools.MarketTimeUtil
@@ -198,7 +198,7 @@ class BigMoveSniper: BaseBot(
 }
 
 fun main() {
-    val l = com.github.wigggy.botsbase.active_bots.BigMoveSniper().getTodaysClosed()
+    val l = BigMoveSniper().getTodaysClosed()
 
     var g = 0.0
     for (p in l){

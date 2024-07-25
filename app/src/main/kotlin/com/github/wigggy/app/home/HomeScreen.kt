@@ -6,7 +6,7 @@ import com.github.wigggy.app.common.camelCaseToNormalCase
 import com.github.wigggy.app.common.collectLatestSafe
 import com.github.wigggy.app.home.components.bot_panel.BotInfoPanel
 import com.github.wigggy.app.home.components.open_pos_display.OpenPosDisplay
-import com.github.wigggy.botsbase.systems.BotManager
+import com.github.wigggy.botsbase.systems.managers.BotManager
 import javafx.geometry.Pos
 import javafx.scene.control.Label
 import javafx.scene.control.ScrollPane

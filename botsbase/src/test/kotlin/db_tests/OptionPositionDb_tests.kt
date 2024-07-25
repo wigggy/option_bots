@@ -1,6 +1,6 @@
 package db_tests
 
-import OptionPositionDb
+import com.github.wigggy.botsbase.systems.data.OptionPositionDb
 import com.github.wigggy.botsbase.systems.data.data_objs.OptionPosition
 import java.util.*
 

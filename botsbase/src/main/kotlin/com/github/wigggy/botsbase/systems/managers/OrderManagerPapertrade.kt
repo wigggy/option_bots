@@ -1,6 +1,6 @@
-package com.github.wigggy.botsbase.systems
+package com.github.wigggy.botsbase.systems.managers
 
-import OptionPositionDb
+import com.github.wigggy.botsbase.systems.data.OptionPositionDb
 import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
 import com.github.wigggy.botsbase.systems.bot_tools.Common
 import com.github.wigggy.botsbase.systems.data.data_objs.OptionPosition

@@ -1,6 +1,6 @@
 package db_tests
 
-import com.github.wigggy.botsbase.systems.BotStateDb
+import com.github.wigggy.botsbase.systems.data.BotStateDb
 import com.github.wigggy.botsbase.systems.data.data_objs.BotState
 
 

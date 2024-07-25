@@ -8,22 +8,22 @@ version = '1.0-SNAPSHOT'
 
 
 dependencies {
-    testImplementation 'org.jetbrains.kotlin:kotlin-test'
 
+    // Kotlin
+    testImplementation 'org.jetbrains.kotlin:kotlin-test'
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.9.0-RC'
 
     // SQLite stuff
     implementation("com.zaxxer:HikariCP:5.0.1")
     implementation 'org.xerial:sqlite-jdbc:3.46.0.0'
     implementation('ch.qos.logback:logback-classic:1.4.12')
-
-
     implementation 'com.google.code.gson:gson:2.10.1'
 
-    // My Stuff ////////////////////////////////////////////////////////////////////////
+    // Stock Chart Technical Analysis
+    implementation 'com.tictactec:ta-lib:0.4.0'
 
-    // Might not need to be 'api'
-    api 'com.github.wigggy:charles-schwab-api:1.0'
+    // My Stuff ////////////////////////////////////////////////////////////////////////
+    implementation 'com.github.wigggy:charles-schwab-api:1.0'
 }
 
 test {

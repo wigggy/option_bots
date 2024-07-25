@@ -1,4 +1,4 @@
-package com.github.wigggy.botsbase.systems
+package com.github.wigggy.botsbase.systems.managers
 
 import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
 import com.github.wigggy.botsbase.systems.bot_tools.Common

@@ -1,3 +1,5 @@
+package com.github.wigggy.botsbase.systems.data
+
 import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
 import com.github.wigggy.botsbase.systems.data.data_objs.OptionPosition
 import com.zaxxer.hikari.HikariConfig
@@ -13,7 +15,7 @@ import java.time.ZoneId
 
 class OptionPositionDb(private val botName: String) {
 
-    private val log = BotToolsLogger("OptionPositionDb:$botName")
+    private val log = BotToolsLogger("com.github.wigggy.botsbase.systems.data.OptionPositionDb:$botName")
     private val jdbcUrl = "jdbc:sqlite:_savedata/option_position_db_for_$botName.db"
     private val OPTION_POS_TABLE_NAME = "option_positions"
     private val dbDataSource: HikariDataSource = buildHikariDatasource()
