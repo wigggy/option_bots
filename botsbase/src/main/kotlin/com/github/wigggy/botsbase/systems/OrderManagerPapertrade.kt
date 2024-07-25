@@ -1,16 +1,32 @@
 package com.github.wigggy.botsbase.systems
 
 import OptionPositionDb
-import com.github.wi110r.charlesschwab_api.data_objs.OptionQuote
 import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
 import com.github.wigggy.botsbase.systems.bot_tools.Common
 import com.github.wigggy.botsbase.systems.data.data_objs.OptionPosition
 import com.github.wigggy.botsbase.systems.interfaces.OrderManager
+import com.github.wigggy.charles_schwab_api.data_objs.OptionQuote
 import java.util.*
+import kotlin.math.round
+import kotlin.random.Random
 
 class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
 
     private val log = BotToolsLogger(OrderManagerPapertrade::class.java.simpleName)
+
+    private val limitOrderSimRandomAmountExtraMin = 0.0
+    private val limitOrderSimRandomAmountExtraMax = 0.5
+
+
+    /** Used to randomize how much above ask/ below bid to +/- on orders...
+     *
+     * Note: The Reason for this is: When i submit a real-trade Limit Order
+     * i always add extra or - extra to make sure order goes through. This helps simulate that*/
+    private fun limitOrderExtraRandomizer(): Double {
+        val randomValue = Random.nextDouble(limitOrderSimRandomAmountExtraMin, limitOrderSimRandomAmountExtraMax)
+        return round(randomValue * 100) / 100
+    }
+
 
     override fun buyOrder(
         botName: String,
@@ -35,11 +51,16 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
             date
         }
 
+
         val quote = Common.csApi.getOptionQuote(option_symbol)
         if (quote == null){
             log.w("buyOrder() Failed to open position. Null return on quote for $option_symbol. ")
             return null
         }
+
+        // Simulate a limit order where you offer more than ask
+        val costPer = quote.askPrice + limitOrderExtraRandomizer()
+
         val putOrCall = isPutOrCall(quote.symbol)
         val curTime = System.currentTimeMillis()
         val newPos = OptionPosition(
@@ -63,8 +84,8 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
             dteAtPurchaseTime = quote.daysToExpiration,
             quantity = quantity,
             fees = quantity.toDouble() * 1.3,
-            pricePer = quote.askPrice + 1.3,
-            totalPrice = (quote.askPrice * quantity.toDouble()) + (quantity.toDouble() * 1.3),
+            pricePer = costPer + 1.3,
+            totalPrice = (costPer * quantity.toDouble()) + (quantity.toDouble() * 1.3),
             bid = quote.bidPrice,
             ask = quote.askPrice,
             mark = quote.mark,
@@ -142,16 +163,18 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
         val extraData = optionPos.extraData.toMutableMap()
         extraData["extraClosingData"] = extraClosingData
 
+        val sellPrice = q.bidPrice - limitOrderExtraRandomizer()
+
         // Update pos dollar/pct values
         val totalCost = optionPos.totalPrice
         val quan = optionPos.quantity
-        val gainDollarTotal = (q.bidPrice * quan.toDouble()) - totalCost
-        val gainDollarPer = q.bidPrice - optionPos.pricePer
-        val gainPercent = (((q.bidPrice) - optionPos.pricePer) / optionPos.pricePer) * 100
+        val gainDollarTotal = (sellPrice * quan.toDouble()) - totalCost
+        val gainDollarPer = sellPrice - optionPos.pricePer
+        val gainPercent = (((sellPrice) - optionPos.pricePer) / optionPos.pricePer) * 100
         val closeTs = System.currentTimeMillis()
         val closeD = java.util.Date(closeTs)
 
-        val valOfPos = (q.bidPrice * quan.toDouble()) - optionPos.fees
+        val valOfPos = (sellPrice * quan.toDouble()) - optionPos.fees
         val valPer = valOfPos / quan.toDouble()
 
         val highGdPerCon =

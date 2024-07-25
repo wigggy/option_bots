@@ -88,11 +88,11 @@ class TestBot: BaseBot(
 fun main() {
 
 //    'Jul 20, 2024'
-//    val tb = TestBot()
-//    tb.generateSamplePositions(5)
+    val tb = TestBot()
+    tb.generateSamplePositions(5)
 
-    val t = Common.csApi.getStockQuote("SPY")
-    println(t)
+//    val t = Common.csApi.getStockQuote("SPY")
+//    println(t)
 
 }
 

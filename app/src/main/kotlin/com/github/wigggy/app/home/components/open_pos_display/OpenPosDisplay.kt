@@ -15,7 +15,7 @@ import javafx.scene.paint.Paint
 import javafx.scene.text.Font
 import javafx.scene.text.FontWeight
 
-class OpenPosDisplay(pos: OptionPosition) : VBox() {
+class OpenPosDisplay() : VBox() {
 
     private val optionSymbolLabel = Label().apply {
         style = "-fx-font-size: 50; -fx-font-weight: bold"
@@ -137,7 +137,6 @@ class OpenPosDisplay(pos: OptionPosition) : VBox() {
             bottomSpacer
         )
         setStyle()
-        update(pos)
     }
 
     private fun setStyle() {

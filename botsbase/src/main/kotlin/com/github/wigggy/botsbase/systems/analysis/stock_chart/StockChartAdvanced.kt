@@ -1,11 +1,14 @@
 package com.github.wigggy.botsbase.systems.analysis.stock_chart
 
-import com.github.wi110r.charlesschwab_api.data_objs.stockchart.CharlesSchwabHistoricData
 import com.github.wigggy.botsbase.systems.bot_tools.Common
+import com.github.wigggy.charles_schwab_api.data_objs.stockchart.CharlesSchwabHistoricData
 import java.util.*
 import kotlin.math.abs
 
 
+
+// TODO Go through and set property values for the following types of values
+//      - closedAtHigh = .20, - isBottomHammer = .4
 data class StockChartAdvanced(
     val ticker: String,
     val candleSize: String,
@@ -426,10 +429,6 @@ data class StockChartAdvanced(
      */
     fun isTopBodyHammer(index: Int): Boolean {
 
-        // Closed at/near high (.05%)
-        if (!closedAtHigh(index)) {
-            return false
-        }
 
         // If big tail, return true
         if (getTailSizeAsPercentageOfTotalSize(index) > .5) {
@@ -444,11 +443,6 @@ data class StockChartAdvanced(
      * Returns true if candle is Bottom Body Hammer. (Small Body + No Tail + Big Head)
      */
     fun isBottomBodyHammer(index: Int): Boolean {
-
-        // Closed at/near low (.05%)
-        if (!closedAtLow(index)) {
-            return false
-        }
 
         // If big head, return true
         if (getHeadSizeAsPercentageOfTotalSize(index) > .5) {

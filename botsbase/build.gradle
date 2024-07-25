@@ -23,7 +23,7 @@ dependencies {
     // My Stuff ////////////////////////////////////////////////////////////////////////
 
     // Might not need to be 'api'
-    api 'com.github.wigggy:charles-schwab-api:1.0.1'
+    api 'com.github.wigggy:charles-schwab-api:1.0'
 }
 
 test {

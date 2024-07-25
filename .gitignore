@@ -43,3 +43,5 @@ bin/
 
 /_savedata/csapi_auth.json
 /botsbase/src/main/resources/cs_auth.json
+/_savedata
+/_bot_logs

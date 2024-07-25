@@ -7,7 +7,6 @@ import com.github.wigggy.app.common.collectLatestSafe
 import com.github.wigggy.app.home.components.bot_panel.BotInfoPanel
 import com.github.wigggy.app.home.components.open_pos_display.OpenPosDisplay
 import com.github.wigggy.botsbase.systems.BotManager
-import javafx.application.Platform
 import javafx.geometry.Pos
 import javafx.scene.control.Label
 import javafx.scene.control.ScrollPane
@@ -25,33 +24,31 @@ class HomeScreen(vm: HomeViewModel, extraData: Map<String, String>? = null): Scr
 
     private val coroutineScopeUiUpdates = CoroutineScope(Job() + Dispatchers.Main)
 
-    private val l = Label("Home")
 
     // BotPanel Scrollpane
     private val scrollPaneBotPanels = buildScrolLPaneBotPanel()
     private val scrollPaneBotPanelContent = buildScrollPaneBotPanelContent()
 
-    // Open Pos
-    private val vboxOpenPos = VBox()
-    private val labelOpenPos = buildOpenPosHeader()
+    // Open Pos Display
+    private val openPosDisplayContainerVBox = VBox()
+    private val labelHeaderOpenPos = buildOpenPosHeader()
     private val scrollPaneOpenPos = buildScrollPaneOpenPos()
-    private val scrollPaneOpenPosContent = buildScrollPaneOpenPosContent()
+    private val scrollPaneOpenPosContentVBox = buildScrollPaneOpenPosContent()
+    private val listOfOpenPosDisplays = mutableListOf<OpenPosDisplay>()
 
     init {
         initStyle()
         initUiStateFlowCollection()
-        // header
-        this.top = l
 
         // BotPanel scrollpane
         scrollPaneBotPanels.content = scrollPaneBotPanelContent
         this.left = scrollPaneBotPanels
 
-        scrollPaneOpenPos.content = scrollPaneOpenPosContent
-        vboxOpenPos.children.add(labelOpenPos)
-        vboxOpenPos.children.add(scrollPaneOpenPos)
-        this.center = vboxOpenPos
-
+        // Open Position scrollpane
+        scrollPaneOpenPos.content = scrollPaneOpenPosContentVBox
+        openPosDisplayContainerVBox.children.add(labelHeaderOpenPos)
+        openPosDisplayContainerVBox.children.add(scrollPaneOpenPos)
+        this.center = openPosDisplayContainerVBox
     }
 
 
@@ -117,7 +114,6 @@ class HomeScreen(vm: HomeViewModel, extraData: Map<String, String>? = null): Scr
 
 
     private fun initUiStateFlowCollection() {
-
         viewModel.uiState.collectLatestSafe(this, coroutineScopeUiUpdates){ uiState ->
 
             // Update Bot Info Panels   -------------------------------------------------------------------------------
@@ -151,44 +147,43 @@ class HomeScreen(vm: HomeViewModel, extraData: Map<String, String>? = null): Scr
                 for (panel in curPanels){
                     val bp = panel as BotInfoPanel
                     val bn = bp.initialBotstate.botName
-                    Platform.runLater {
+                    coroutineScopeUiUpdates.launch {
                         bp.update(mapOfBotStates[bn]!!)
                     }
                 }
             }
 
-            // TODO Make this more efficient by checking if the same bot's pos disp is showing and if so
-            //      updating open pos disps that already exist and clearing open pos disps if pos has been closed
-            //      or adding more open pos disps new positions have been opened.
-            // Update Open Pos Display --------------------------------------------------------------------------------
+
+            // Update Open Pos Displays (Update previously created Displays, create more if needed) -------------------
+            // Update Header
             val newHeader = camelCaseToNormalCase(uiState.curBotnameOpenPosShowing) + " Open Positions"
-            labelOpenPos.text = newHeader
+            labelHeaderOpenPos.text = newHeader
 
-            // Make new disp
-            val posDisps = mutableListOf<OpenPosDisplay>()
-            for (p in uiState.curBotsOpenPosList){
-                posDisps.add(OpenPosDisplay(p))
+            // Sort list so the oldest open pos is on top
+            val curBotsOpenPosList = uiState.curBotsOpenPosList.sortedBy { it.openTimestampMs }
+
+            // Check how many panels exist, create more if needed
+            val newPanelsNeeded = curBotsOpenPosList.size - listOfOpenPosDisplays.size
+            if (newPanelsNeeded > 0){
+                // Create panels, add to openPosDisplaysList
+                for (n in 0..newPanelsNeeded){
+                    listOfOpenPosDisplays.add(OpenPosDisplay())
+                }
             }
 
-            coroutineScopeUiUpdates.launch{
-                val scrollValueV = scrollPaneOpenPos.vvalue
-                val scrollValueH = scrollPaneOpenPos.hvalue
-
-                scrollPaneOpenPosContent.children.clear()
-                scrollPaneOpenPosContent.children.addAll(posDisps)
-                scrollPaneOpenPos.vvalue = scrollValueV
-                scrollPaneOpenPos.hvalue = scrollValueH
+            // Get OpenPosDisplays from list of created displays and update with new values
+            val updatedDisplays = listOfOpenPosDisplays.take(curBotsOpenPosList.size)
+            for (n in 0..curBotsOpenPosList.lastIndex){
+                updatedDisplays[n].update(curBotsOpenPosList[n])
             }
 
-
-
-
-
-
-
-            // Update Open Pos Display --------------------------------------------------------------------------------
-
+            // Clear old disps and Add updated disps to ScrollPane Content Vbox
+            coroutineScopeUiUpdates.launch {
+                scrollPaneOpenPosContentVBox.children.clear()
+                scrollPaneOpenPosContentVBox.children.addAll(updatedDisplays)
+            }
         }
+
     }
 
 

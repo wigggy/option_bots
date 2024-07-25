@@ -1,7 +1,7 @@
 package com.github.wigggy.botsbase.systems.bot_tools
 
 import com.github.wigggy.botsbase.tools.FileHelper
-import com.github.wigggy.charlesschwab_api.CharlesSchwabApi
+import com.github.wigggy.charles_schwab_api.CharlesSchwabApi
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializer
