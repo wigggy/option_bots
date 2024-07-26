@@ -9,7 +9,7 @@ import kotlin.math.abs
 
 // TODO Go through and set property values for the following types of values
 //      - closedAtHigh = .20, - isBottomHammer = .4
-data class StockChartAnalysis(
+data class StockChartAdvanced(
     val ticker: String,
     val candleSize: String,
     val periodSize: Int,
@@ -456,7 +456,7 @@ data class StockChartAnalysis(
     companion object {
 
         // Creates Chart from Charles Schwab Api Historic Data
-        fun fromCSHistoricData(csHistoricData: CharlesSchwabHistoricData): StockChartAnalysis {
+        fun fromCSHistoricData(csHistoricData: CharlesSchwabHistoricData): StockChartAdvanced {
 
             val convertCandles = {
                 val loc = mutableListOf<Candle>()
@@ -478,7 +478,7 @@ data class StockChartAnalysis(
                 loc.toList()
             }
 
-            return StockChartAnalysis(
+            return StockChartAdvanced(
                 ticker = csHistoricData.ticker,
                 candleSize = csHistoricData.candleSize,
                 periodSize = csHistoricData.open.size,
@@ -499,7 +499,7 @@ data class StockChartAnalysis(
 
 fun main() {
     val c = Common.csApi.getHistoricData1day("SPY", 6, false)!!
-    val sc = StockChartAnalysis.fromCSHistoricData(c)
+    val sc = StockChartAdvanced.fromCSHistoricData(c)
     val cLast = c.open[c.open.lastIndex]
     val scLast = sc.getOpenAtIndex(-1)
 

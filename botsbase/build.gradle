@@ -23,7 +23,7 @@ dependencies {
     implementation 'com.tictactec:ta-lib:0.4.0'
 
     // My Stuff ////////////////////////////////////////////////////////////////////////
-    implementation 'com.github.wigggy:charles-schwab-api:1.0'
+    api 'com.github.wigggy:charles-schwab-api:1.0'
 }
 
 test {

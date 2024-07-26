@@ -51,6 +51,8 @@ data class BotState(
     val topGainingTickerGainDollar: Double = 0.0,
     val daysTickerGainMap: Map<String, Double> = mapOf(),
     val cycleCount: Int = 0,
+    val blackListLastUpdatedMs: Long = 0L,
+    val watchlistLastUpdateMs: Long = 0L
 )
 
 // TODO -- Add win/loss stats

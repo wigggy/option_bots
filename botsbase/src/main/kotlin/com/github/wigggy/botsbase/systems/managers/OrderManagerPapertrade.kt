@@ -1,7 +1,7 @@
 package com.github.wigggy.botsbase.systems.managers
 
 import com.github.wigggy.botsbase.systems.data.OptionPositionDb
-import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
+import com.github.wigggy.botsbase.systems.bot_tools.ColorLogger
 import com.github.wigggy.botsbase.systems.bot_tools.Common
 import com.github.wigggy.botsbase.systems.data.data_objs.OptionPosition
 import com.github.wigggy.botsbase.systems.interfaces.OrderManager
@@ -12,10 +12,10 @@ import kotlin.random.Random
 
 class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
 
-    private val log = BotToolsLogger(OrderManagerPapertrade::class.java.simpleName)
+    private val log = ColorLogger(OrderManagerPapertrade::class.java.simpleName)
 
     private val limitOrderSimRandomAmountExtraMin = 0.0
-    private val limitOrderSimRandomAmountExtraMax = 0.5
+    private val limitOrderSimRandomAmountExtraMax = 0.05
 
 
     /** Used to randomize how much above ask/ below bid to +/- on orders...
@@ -24,7 +24,7 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
      * i always add extra or - extra to make sure order goes through. This helps simulate that*/
     private fun limitOrderExtraRandomizer(): Double {
         val randomValue = Random.nextDouble(limitOrderSimRandomAmountExtraMin, limitOrderSimRandomAmountExtraMax)
-        return round(randomValue * 100) / 100
+        return round(randomValue * 100) / 100 * 100
     }
 
 
@@ -54,12 +54,12 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
 
         val quote = Common.csApi.getOptionQuote(option_symbol)
         if (quote == null){
-            log.w("buyOrder() Failed to open position. Null return on quote for $option_symbol. ")
+            log.warn("buyOrder() Failed to open position. Null return on quote for $option_symbol. ")
             return null
         }
 
         // Simulate a limit order where you offer more than ask
-        val costPer = quote.askPrice + limitOrderExtraRandomizer()
+//        val costPer = quote.askPrice + limitOrderExtraRandomizer()
 
         val putOrCall = isPutOrCall(quote.symbol)
         val curTime = System.currentTimeMillis()
@@ -84,8 +84,8 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
             dteAtPurchaseTime = quote.daysToExpiration,
             quantity = quantity,
             fees = quantity.toDouble() * 1.3,
-            pricePer = costPer + 1.3,
-            totalPrice = (costPer * quantity.toDouble()) + (quantity.toDouble() * 1.3),
+            pricePer = quote.askPrice + 1.3,
+            totalPrice = (quote.askPrice * quantity.toDouble()) + (quantity.toDouble() * 1.3),
             bid = quote.bidPrice,
             ask = quote.askPrice,
             mark = quote.mark,
@@ -135,7 +135,7 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
         PosUpdateManager.addOptionSymbolToUpdateRequests(option_symbol)
         val s = db.insertOptionPosition(newPos)
         if (!s){
-            log.w("buyOrder() Failed to open position. Database Insert Error.")
+            log.warn("buyOrder() Failed to open position. Database Insert Error.")
             return null
         }
         return newPos
@@ -155,7 +155,7 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
         // get quote
         val q = Common.csApi.getOptionQuote(optionPos.optionSymbol)
         if (q == null){
-            log.w("sellOrder() Failed to close position. Null return on quote for ${optionPos.optionSymbol}. ")
+            log.warn("sellOrder() Failed to close position. Null return on quote for ${optionPos.optionSymbol}. ")
             return null
         }
 
@@ -252,7 +252,7 @@ class OrderManagerPapertrade(private val db: OptionPositionDb): OrderManager {
         PosUpdateManager.removeOptionSymbolFromUpdateRequests(closedPos.optionSymbol)
         val s = db.updateOptionPosition(closedPos)
         if (!s){
-            log.w("sellOrder() Failed to close position. Database Update Error.")
+            log.warn("sellOrder() Failed to close position. Database Update Error.")
         }
         return closedPos
 

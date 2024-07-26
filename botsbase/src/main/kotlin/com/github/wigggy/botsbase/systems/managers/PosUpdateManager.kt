@@ -1,6 +1,6 @@
 package com.github.wigggy.botsbase.systems.managers
 
-import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
+import com.github.wigggy.botsbase.systems.bot_tools.ColorLogger
 import com.github.wigggy.botsbase.systems.bot_tools.Common
 import com.github.wigggy.botsbase.systems.bot_tools.MarketTimeUtil
 import com.github.wigggy.botsbase.systems.data.data_objs.OptionPosition
@@ -12,7 +12,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 object PosUpdateManager {
 
-    private val log = BotToolsLogger("PosUpdateManager")
+    private val log = ColorLogger("PosUpdateManager")
     private val csApi = Common.csApi
 
     private val updateRequestList = mutableListOf<String>()
@@ -20,7 +20,7 @@ object PosUpdateManager {
     val quoteMapStateflow = _quoteMapStateFlow.asStateFlow()
 
     private val updateCycleTime = 5_000L        // 6seconds
-    private val marketClosedCycleTimeMultiplier = 10L       // If closed sleep time will be cycleTime X 10
+    private val marketClosedCycleTimeMultiplier = 1L       // If closed sleep time will be cycleTime X 10
     private var updateThread: Thread? = null
     private val updateThreadShutdownFlag = AtomicBoolean(false)
 
@@ -30,7 +30,7 @@ object PosUpdateManager {
         Runtime.getRuntime().addShutdownHook(
             Thread{
                 shutdownUpdaterThread()
-                log.w("init() Shutdown Hook Triggered. Shutting down updateThread")
+                log.warn("init() Shutdown Hook Triggered. Shutting down updateThread")
             }
         )
     }
@@ -42,6 +42,7 @@ object PosUpdateManager {
             updateRequestList.add(s.uppercase())
         }
     }
+
 
     fun addMultipleOptionSymbolsToUpdateRequests(listOfSyms: List<String>){
         for (s in listOfSyms){
@@ -63,14 +64,14 @@ object PosUpdateManager {
             val quotes = csApi.getMultiOptionQuote(updateRequestList)
 
             if (quotes == null){
-                log.w("fetchQuotes() Failed to get quotes for ${_quoteMapStateFlow.value.keys.size} symbols. " +
+                log.warn("fetchQuotes() Failed to get quotes for ${updateRequestList} symbols. " +
                         "Null return.")
                 return
             }
 
             _quoteMapStateFlow.value = quotes
         } catch (e: Exception){
-            log.w("fetchQuotes() Failed to get quotes for ${_quoteMapStateFlow.value.keys.size} symbols. " +
+            log.warn("fetchQuotes() Failed to get quotes for ${_quoteMapStateFlow.value.keys.size} symbols. " +
                     "Exception Triggered. Message: ${e.message}")
             e.printStackTrace()
         }
@@ -95,9 +96,9 @@ object PosUpdateManager {
                 }
                 if (sleepTime <= 0) continue
                 try { Thread.sleep(sleepTime) }
-                catch (e: Exception) { log.w("updateThread Thread.sleep() Interrupted"); break}
+                catch (e: Exception) { log.warn("updateThread Thread.sleep() Interrupted"); break}
             }
-            log.w("startUpdaterThread() updateThreadShutdownFlag set to true. updateThread is Dead")
+            log.warn("startUpdaterThread() updateThreadShutdownFlag set to true. updateThread is Dead")
         }
 
         updateThread!!.start()

@@ -2,7 +2,7 @@ package com.github.wigggy.botsbase.systems
 
 
 import com.github.wigggy.botsbase.systems.data.OptionPositionDb
-import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
+import com.github.wigggy.botsbase.systems.bot_tools.ColorLogger
 import com.github.wigggy.botsbase.systems.bot_tools.Common
 import com.github.wigggy.botsbase.systems.bot_tools.MarketTimeUtil
 import com.github.wigggy.botsbase.systems.bot_tools.collectLatestSafe
@@ -49,7 +49,7 @@ abstract class BaseBot(
 ): Thread() {
 
     // Basics
-    private val log = BotToolsLogger(botName)
+    private val log = ColorLogger(botName)
     private val coroutineScopeIO = CoroutineScope(Dispatchers.IO)
     private val coroutineScopePosUpdate = CoroutineScope(buildPosUpdateCoroutineDispatcher())
     protected val csApi = Common.csApi
@@ -103,6 +103,9 @@ abstract class BaseBot(
         // Load bot state
         loadBotState()
 
+        resetBlacklistForDay()
+        resetWatchlistForDay()
+
         // Update bot status (open/closed positiosn, gain/loss, etc...)
         updateBot()
 
@@ -112,7 +115,7 @@ abstract class BaseBot(
         // Set flag
         initBotRan = true
 
-        log.i("initBot() Ran.")
+        log.dbug("initBot() Ran.")
 
         return
     }
@@ -131,7 +134,7 @@ abstract class BaseBot(
         if (bs != null){
             _botState.value = bs
             botStateInitialized = true
-            log.i("loadBotState() Ran.")
+            log.dbug("loadBotState() Ran.")
             return
         }
 
@@ -141,17 +144,23 @@ abstract class BaseBot(
         )
         _botState.value = newBs
         botStateInitialized = true
-        log.i("loadBotState() Ran.")
+        log.dbug("loadBotState() Ran.")
     }
 
 
     /** Saves botstate in DB and updates the StateFlow<BotState> */
     protected fun saveBotState(state: BotState) {
-        botStateDb.updateBotState(state)
+        val t = System.currentTimeMillis()
+        val d = Date(t)
+        val newState = state.copy(
+            lastUpdateTimestampMs = t,
+            lastUpdateDate = d
+        )
+        botStateDb.updateBotState(newState)
         _botState.update {
-            state
+            newState
         }
-        log.i("updateBotState() Ran.")
+        log.dbug("updateBotState() Ran.")
     }
 
 
@@ -180,8 +189,45 @@ abstract class BaseBot(
             curTotalBalance = getTotalBalance(),
             buyingPower = getBuyingPower()
         )
-        log.i("updateDaysStartingBalances() Ran. Current Cash Bal: $curCashBal")
+        log.dbug("updateDaysStartingBalances() Ran. Current Cash Bal: $curCashBal")
         saveBotState(newState)
+    }
+
+
+    private fun resetBlacklistForDay() {
+        // Get the start of the current day in millis
+        val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+        // blacklist
+        if (_botState.value.blackListLastUpdatedMs < startOfDay) {
+            saveBotState(_botState.value.copy(
+                tickerBlackList = listOf(), blackListLastUpdatedMs = System.currentTimeMillis())
+            )
+        }
+
+        // watchlist
+        if (_botState.value.watchlistLastUpdateMs < startOfDay) {
+            saveBotState(_botState.value.copy(
+                watchlist = listOf(), watchlistLastUpdateMs = System.currentTimeMillis()
+            ))
+        }
+    }
+
+
+    private fun resetWatchlistForDay() {
+        // Get the start of the current day in millis
+        val startOfDay = LocalDate.now().atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+
+        // watchlist
+        if (_botState.value.watchlistLastUpdateMs < startOfDay) {
+            saveBotState(_botState.value.copy(
+                watchlist = listOf(), watchlistLastUpdateMs = System.currentTimeMillis()
+            ))
+        }
     }
 
 
@@ -224,38 +270,6 @@ abstract class BaseBot(
             _botState.value.copy(curCashPapertradeBalance = cb)
         )
         return cb
-    }
-
-
-    /** Adds tickerSymbol to Blacklist in state. */
-    protected fun addTickersToBlacklist(vararg tickerSymbols: String) {
-
-        val bl = _botState.value.tickerBlackList.toMutableList()
-        val added = mutableListOf<String>()
-        for (t in tickerSymbols){
-            bl.add(t)
-            added.add(t)
-        }
-
-        val state = _botState.value.copy(tickerBlackList = bl)
-        saveBotState(state)
-        log.i("addTickerToBlacklist() Called. $added Added To Blacklist. Current Blacklist: $bl")
-    }
-
-
-    /** Adds tickerSymbol to Watchlist in state. */
-    protected fun addTickerToWatchlist(vararg tickerSymbols: String) {
-        val wl = _botState.value.watchlist.toMutableList()
-        val added = mutableListOf<String>()
-        for (t in tickerSymbols) {
-            wl.add(t)
-            added.add(t)
-        }
-        val s = _botState.value.copy(
-            watchlist = wl
-        )
-        saveBotState(s)
-        log.i("addTickerToWatchlist() Called. $added Added to Watchlist. Current Watchlist: $wl")
     }
 
 
@@ -434,6 +448,7 @@ abstract class BaseBot(
         return _botState.value.curOpenPositions.size
     }
 
+
     protected fun getNumberOfOpenPositionsOnTicker(t: String): Int {
         val oList = posDb.getAllOpenOptionPositions()
         var n = 0
@@ -446,7 +461,69 @@ abstract class BaseBot(
     }
 
 
-    protected fun openPosition(
+    protected fun getNumberOfLossesOnTicker(t: String): Int {
+        val closedPosList = getTodaysClosed()
+
+        var losses = 0
+        for (p in closedPosList){
+            if (p.stockSymbol != t) continue
+
+            if (p.gainLossDollarTotal < 0.0){
+                losses += 1
+            }
+        }
+        return losses
+    }
+
+
+    protected fun getTickerBlacklist(): List<String> {
+        return _botState.value.tickerBlackList
+    }
+
+
+    /** Adds tickerSymbol to Blacklist in state. */
+    protected fun addTickersToBlacklist(vararg tickerSymbols: String) {
+
+        val bl = _botState.value.tickerBlackList.toMutableList()
+        val added = mutableListOf<String>()
+        for (t in tickerSymbols){
+            bl.add(t)
+            added.add(t)
+        }
+
+        val state = _botState.value.copy(tickerBlackList = bl, blackListLastUpdatedMs = System.currentTimeMillis())
+        saveBotState(state)
+        log.dbug("addTickerToBlacklist() Called. $added Added To Blacklist. Current Blacklist: $bl")
+        log.info("addTickerToBlacklist() Called. $added Added To Blacklist. Current Blacklist: $bl")
+    }
+
+
+    /** Adds tickerSymbol to Watchlist in state. */
+    protected fun addTickerToWatchlist(vararg tickerSymbols: String) {
+        val wl = _botState.value.watchlist.toMutableList()
+        val added = mutableListOf<String>()
+        for (t in tickerSymbols) {
+            wl.add(t)
+            added.add(t)
+        }
+        val s = _botState.value.copy(
+            watchlist = wl
+        )
+        saveBotState(s)
+        log.dbug("addTickerToWatchlist() Called. $added Added to Watchlist. Current Watchlist: $wl")
+    }
+
+
+    protected fun replaceWatchlist(newWatchlist: List<String>) {
+        saveBotState(_botState.value.copy(
+            watchlist = newWatchlist,
+            watchlistLastUpdateMs = System.currentTimeMillis()
+        ))
+        log.info("replaceWatchlist() New List: $newWatchlist")
+    }
+
+
+    fun openPosition(
         optionSymbol: String,
         quantity: Int,
         tpDollar: Double,
@@ -470,7 +547,7 @@ abstract class BaseBot(
             extraData
         )
         if (pos == null){
-            log.w("openNewPosition(): Failed to open position" +
+            log.warn("openNewPosition(): Failed to open position" +
                     " for $optionSymbol, quan: $quantity.")
             return false
         }
@@ -483,14 +560,17 @@ abstract class BaseBot(
         val newBp = _botState.value.buyingPower
         val newBal = _botState.value.curCashPapertradeBalance
         val totalBal = _botState.value.curTotalBalance
-        log.i("openPosition() Position Opened. $optionSymbol Quantity: $quantity " +
+        log.dbug("openPosition() Position Opened. $optionSymbol Quantity: $quantity " +
+                "Total Cost: $price Cost Per: ${pos.pricePer} Buying Power Left: $newBp " +
+                "New Cash Balance: $newBal New Total Balance: $totalBal")
+        log.info("openPosition() Position Opened. $optionSymbol Quantity: $quantity " +
                 "Total Cost: $price Cost Per: ${pos.pricePer} Buying Power Left: $newBp " +
                 "New Cash Balance: $newBal New Total Balance: $totalBal")
         return true
     }
 
 
-    protected fun closePosition(
+    fun closePosition(
         pos: OptionPosition,
         closeReason: String,
         extraClosingData: String = ""
@@ -499,7 +579,7 @@ abstract class BaseBot(
         val closed = orderManager.sellOrder(pos, closeReason, extraClosingData)
 
         if (closed == null){
-            log.w("closePosition(): Failed to close position" +
+            log.warn("closePosition(): Failed to close position" +
                     " for ${pos.optionSymbol}, quan: ${pos.quantity}.")
             return false
         }
@@ -510,7 +590,11 @@ abstract class BaseBot(
         val newBal = _botState.value.curCashPapertradeBalance
         val totalBal = _botState.value.curTotalBalance
 
-        log.i("closePosition() Position Closed. ${pos.optionSymbol} Quantity: ${pos.quantity} " +
+        log.dbug("closePosition() Position Closed. ${pos.optionSymbol} Quantity: ${pos.quantity} " +
+                "Close Reason: $closeReason Total Val: $${closed.curValueOfPosition} " +
+                "Gain: $${pos.gainLossDollarTotal} - %${pos.gainLossPercent} " +
+                "Gain Per: $${pos.gainLossDollarPer} New Total Balance: $totalBal")
+        log.info("closePosition() Position Closed. ${pos.optionSymbol} Quantity: ${pos.quantity} " +
                 "Close Reason: $closeReason Total Val: $${closed.curValueOfPosition} " +
                 "Gain: $${pos.gainLossDollarTotal} - %${pos.gainLossPercent} " +
                 "Gain Per: $${pos.gainLossDollarPer} New Total Balance: $totalBal")
@@ -569,15 +653,15 @@ abstract class BaseBot(
     }
 
 
-    protected fun closeAllPositions(): Boolean {
+    fun closeAllPositions(): Boolean {
         val posList = botState.value.curOpenPositions
         val failedClosures = mutableListOf<OptionPosition>()
         val deferredClosed = mutableListOf<Deferred<Unit>>()
         // Loop through and launch coroutines attempting to close each position
         for (p in posList){
             val asyncClose = coroutineScopeIO.async {
-                val closed = orderManager.sellOrder(p, "close all positions called.")
-                if (closed == null){
+                val closed = closePosition(p, "close all positions called.")
+                if (closed == false){
                     failedClosures.add(p)
                 }
             }
@@ -644,7 +728,8 @@ abstract class BaseBot(
         power.set(true)
         val bs = _botState.value.copy(power = true)
         saveBotState(bs)
-        log.i("powerOn() Ran()")
+        log.dbug("powerOn() Ran()")
+        log.info("powerOn()")
     }
 
 
@@ -654,14 +739,15 @@ abstract class BaseBot(
         val bs = _botState.value.copy(power = false)
         saveBotState(bs)
 
-        log.i("powerOff() Ran()")
+        log.dbug("powerOff() Ran()")
+        log.info("powerOff()")
     }
 
 
     /** Returns the power value */
     fun getPower(): Boolean{
         val p = power.get()
-        log.i("getPower() Ran(). Cur Value: $p")
+        log.dbug("getPower() Ran(). Cur Value: $p")
         return p
     }
 
@@ -679,7 +765,7 @@ abstract class BaseBot(
     private fun addShutdownHook(){
         Runtime.getRuntime().addShutdownHook(
             Thread{
-                log.w("Shutdown Hook Triggered")
+                log.warn("Shutdown Hook Triggered")
                 this.botThreadShutdown.set(true)
                 this.powerOff()
                 coroutineScopePosUpdate.cancel()
@@ -706,7 +792,7 @@ abstract class BaseBot(
                 val quoteData = mapOfQuotes.get(p.optionSymbol) ?: continue
                 val updated = PosUpdateManager.updateOptionPositionWithQuote(p, quoteData)
                 if (updated == null){
-                    log.w("startPosUPdates() Failed to update pos with " +
+                    log.warn("startPosUPdates() Failed to update pos with " +
                             "PosUpdateManager.updateOptionPositionWithQuote(). " +
                             "id: ${p.id}\n" +
                             "pos: $p\n" +
@@ -725,7 +811,7 @@ abstract class BaseBot(
         try {
             sleep(time ?: postCycleSleepTimeMs)
         }catch (e: Exception){
-            log.w("Sleep Interrupted. Exiting Thread")
+            log.warn("Sleep Interrupted. Exiting Thread")
         }
     }
 
@@ -744,7 +830,7 @@ abstract class BaseBot(
 
         } catch (e: Exception){
 
-            log.w("Failed with Exception to initialize Bot with 'initBot()' or 'runSubclassInit()' or Failed to run" +
+            log.warn("Failed with Exception to initialize Bot with 'initBot()' or 'runSubclassInit()' or Failed to run" +
                     " 'startPosMonitoringThresad()'\nException MSG: ${e.message}\nException ${e.stackTrace}")
             e.printStackTrace()
 
@@ -763,7 +849,7 @@ abstract class BaseBot(
                 if (MarketTimeUtil.isMarketOpen() == false){
                     val waitTime = MarketTimeUtil.getMarketWaitTimeInMillis()
                     val hours = waitTime.toDouble() / 1000.0 / 60.0 / 60.0
-                    log.w("Market Is CLOSED! Wait time: ${doubleToTwoDecimalFormat(hours)} hours.")
+                    log.warn("Market Is CLOSED! Wait time: ${doubleToTwoDecimalFormat(hours)} hours.")
                     sleepThreadSafe(waitTime)
                     continue
                 }
@@ -854,7 +940,7 @@ abstract class BaseBot(
                 sleepThreadSafe()
             } catch (e: Exception){
 
-                log.w("run() Main Bot Loop Failed with Exception. Will Retry After Sleep.\n" +
+                log.warn("run() Main Bot Loop Failed with Exception. Will Retry After Sleep.\n" +
                         "Message: ${e.message}\nStackTrace: ${e.stackTrace}")
                 e.printStackTrace()
                 sleepThreadSafe()

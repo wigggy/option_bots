@@ -1,7 +1,7 @@
 package com.github.wigggy.botsbase.systems.managers
 
 import com.github.wigggy.botsbase.systems.BaseBot
-import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
+import com.github.wigggy.botsbase.systems.bot_tools.ColorLogger
 import com.github.wigggy.botsbase.systems.data.data_objs.BotState
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -11,7 +11,7 @@ import java.util.concurrent.Executors
 
 object BotManager {
 
-    private val log = BotToolsLogger("BotManager")
+    private val log = ColorLogger("BotManager")
 
     val nThreadsInBotStateCollectionDispatcher = 3
     val botStateCollectionDispatcher = createBotStateObservationDispatcher()

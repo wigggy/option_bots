@@ -88,6 +88,7 @@ fun main() {
 
 //    'Jul 20, 2024'
     val tb = TestBot()
+    tb.openPosition("F     240726C00012000",1, 0.0, 0.0, 0.0, 0.0, mapOf())
     tb.generateSamplePositions(5)
 
 //    val t = Common.csApi.getStockQuote("SPY")

@@ -130,7 +130,9 @@ class BotStateDb(
                 topGainingTicker TEXT,
                 topGainingTickerGainDollar REAL,
                 daysTickerGainMap TEXT,
-                cycleCount INTEGER
+                cycleCount INTEGER,
+                blackListLastUpdatedMs INTEGER,
+                watchlistLastUpdateMs INTEGER
             );
         """.trimIndent()
 
@@ -157,8 +159,8 @@ class BotStateDb(
                 avgPercentLoss, daysWins, daysLosses, daysWinLossRatio, daysWinPercentage,
                  daysBiggestGain, daysBiggestLoss, nPositionsOpenedToday, daysTradedTicks, 
                 topGainingTicker, topGainingTickerGainDollar, daysTickerGainMap,
-                cycleCount
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
+                cycleCount, blackListLastUpdatedMs, watchlistLastUpdateMs
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,
              ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
         """.trimIndent()
 
@@ -209,6 +211,8 @@ class BotStateDb(
                     preparedStatement.setDouble(41, botState.topGainingTickerGainDollar)
                     preparedStatement.setString(42, gson.toJson(botState.daysTickerGainMap))
                     preparedStatement.setInt(43, botState.cycleCount)
+                    preparedStatement.setLong(44, botState.blackListLastUpdatedMs)
+                    preparedStatement.setLong(45, botState.watchlistLastUpdateMs)
                     preparedStatement.executeUpdate()
                 }
             }
@@ -252,7 +256,7 @@ class BotStateDb(
                  daysWinLossRatio = ?, daysWinPercentage = ?, daysBiggestGain = ?,
                   daysBiggestLoss = ?, nPositionsOpenedToday = ?, daysTradedTicks = ?, 
                 topGainingTicker = ?, topGainingTickerGainDollar = ?, daysTickerGainMap = ?,
-                cycleCount = ?
+                cycleCount = ?, blackListLastUpdatedMs = ?, watchlistLastUpdateMs = ?
                                 
                 
             WHERE botName = ?
@@ -304,7 +308,9 @@ class BotStateDb(
                     preparedStatement.setDouble(40, botState.topGainingTickerGainDollar)
                     preparedStatement.setString(41, gson.toJson(botState.daysTickerGainMap))
                     preparedStatement.setInt(42, botState.cycleCount)
-                    preparedStatement.setString(43, botState.botName)
+                    preparedStatement.setLong(43, botState.blackListLastUpdatedMs)
+                    preparedStatement.setLong(44, botState.watchlistLastUpdateMs)
+                    preparedStatement.setString(45, botState.botName)
 
                     preparedStatement.executeUpdate()
                 }
@@ -379,7 +385,9 @@ class BotStateDb(
             topGainingTickerGainDollar = resultSet.getDouble("topGainingTickerGainDollar"),
             daysTickerGainMap = gson.fromJson( resultSet.getString("daysTickerGainMap"),
                 object : TypeToken<Map<String, Double>>() {}.type),
-            cycleCount = resultSet.getInt("cycleCount")
+            cycleCount = resultSet.getInt("cycleCount"),
+            blackListLastUpdatedMs = resultSet.getLong("blackListLastUpdatedMs"),
+            watchlistLastUpdateMs = resultSet.getLong("watchlistLastUpdateMs")
         )
     }
 

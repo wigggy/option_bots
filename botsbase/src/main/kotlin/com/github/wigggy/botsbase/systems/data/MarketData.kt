@@ -1,6 +1,6 @@
 package com.github.wigggy.botsbase.systems.data
 
-import com.github.wigggy.botsbase.systems.bot_tools.BotToolsLogger
+import com.github.wigggy.botsbase.systems.bot_tools.ColorLogger
 import com.github.wigggy.botsbase.systems.bot_tools.Common
 import com.github.wigggy.botsbase.tools.Log
 import java.util.concurrent.Callable
@@ -11,7 +11,7 @@ import kotlin.math.abs
 
 object MarketData {
 
-    private val log = BotToolsLogger("MarketData")
+    private val log = ColorLogger("MarketData")
     val csApi = Common.csApi
 
     // Cached data
@@ -21,8 +21,8 @@ object MarketData {
 
 
     // TODO RE-write these --
-    private fun <T> threadPoolHandler(tasks: List<Callable<T>> ,maxThreads: Int = 5, timeoutMS: Long = 7000): List<T> {
-        val executor = Executors.newFixedThreadPool(maxThreads)
+    private fun <T> threadPoolHandler(tasks: List<Callable<T>> ,timeoutMS: Long = 7000): List<T> {
+        val executor = Executors.newVirtualThreadPerTaskExecutor()
         val data = mutableListOf<T>()
         try {
             val futures = mutableListOf<Future<T>>()
@@ -52,7 +52,6 @@ object MarketData {
         }
         return data
     }
-
 
     @Synchronized       // No need for multiple synchronous calls to this because of the Threadpool use
     fun getTopOptionableTickers(): List<Pair<String, Int>>? {
@@ -112,7 +111,6 @@ object MarketData {
             return null
         }
     }
-
 
     private fun getOptionSym(ticker: String, typeCorP: String, itmDepth: Int = 0, minDte: Int = 1): String? {
 
@@ -178,7 +176,6 @@ object MarketData {
         }
     }
 
-
     /** Returns Call symbol matching requirements.
      *
      * @param itmDepth: 0 returns ATM, + Values return ITM, - Values return OTM
@@ -196,11 +193,10 @@ object MarketData {
     fun optionSymbolSearchPut(ticker: String, itmDepth: Int, minDte: Int): String? {
         return getOptionSym(ticker, "P", itmDepth, minDte)
     }
+
 }
 
 fun main() {
-    println(13 / 7)
-
-    val m = MarketData.optionSymbolSearchCall("SPY", 0, 1)
-    println(m)
+    val x = MarketData.getTopOptionableTickers()
+    println(x)
 }

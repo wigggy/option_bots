@@ -23,6 +23,7 @@ class BigMoveSniper: BaseBot(
     private val endTimeHour = 15
     private val endTimeMin = 30
     private val maxEODCloseOutAttempts = 10
+    private val minPriceOfContracts = 50.0
 
     override fun engine1TimeCheckIsOkToCycle(): Boolean {
         // Start Time check
@@ -62,9 +63,14 @@ class BigMoveSniper: BaseBot(
             return listOf()
         }
 
+        // Get Top Optionable Stocks
+        val topTickers = MarketData.getTopOptionableTickers()?.map { it.first } ?: return listOf()
 
-
-        return MarketData.getTopOptionableTickers()?.map { it.first } ?: return listOf()
+        val filteredList = topTickers.filter { s ->
+            getNumberOfLossesOnTicker(s) == 0 && getTickerBlacklist().contains(s) == false
+        }
+        replaceWatchlist(filteredList)
+        return filteredList
     }
 
 
@@ -115,6 +121,7 @@ class BigMoveSniper: BaseBot(
         if (getNumberOfOpenPositions() >= maxOpenPos){
             return
         }
+
         for (a in analysisResults){
 
             // Get n of open pos for ticker, if at max continue
@@ -146,6 +153,14 @@ class BigMoveSniper: BaseBot(
                 return
             }
 
+            // Get Option quote for price of contract
+            val q = csApi.getOptionQuote(os) ?: continue
+            if (q.askPrice <= minPriceOfContracts){
+                addTickersToBlacklist(t)
+                continue
+            }
+
+
             openPosition(os!!, 1, 0.0, tpPctTarget, 0.0, stopPctTarget, mapOf())
         }
     }
@@ -158,6 +173,7 @@ class BigMoveSniper: BaseBot(
         }
         else if (curGainPct <= stopPctTarget){
             closePosition(p, "STOP OF %$stopPctTarget REACHED", "")
+            addTickersToBlacklist(p.stockSymbol)
         }
     }
 
@@ -198,15 +214,15 @@ class BigMoveSniper: BaseBot(
 }
 
 fun main() {
-    val l = BigMoveSniper().getTodaysClosed()
 
-    var g = 0.0
-    for (p in l){
-        g += p.gainLossDollarTotal
-        println("${p.optionSymbol} ${p.gainLossDollarTotal}")
-    }
+    val s = "F     240726C00012000"
 
-    println("G: $g")
+    val bot = BigMoveSniper()
+    val l = bot.getOpenPosList()
+    println(l)
+    bot.closeAllPositions()
+
+
 }
 
 
